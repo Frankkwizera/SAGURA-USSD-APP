@@ -1,0 +1,10 @@
+*.pyc
+*.save
+*.python
+/.idea
+*.iml
+*.log
+./vscode
+
+db.sqlite3
+.env
