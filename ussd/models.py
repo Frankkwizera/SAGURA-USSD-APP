@@ -56,7 +56,8 @@ class Crops(models.Model):
     name = models.CharField(max_length=30)
     CROP_CHOICES = {
         ('FRUITS','FRUITS'),
-        ('VEGETABLES','VEGETABLES')
+        ('VEGETABLES','VEGETABLES'),
+        ('CEREALS','CEREALS')
     }  
     crop_type = models.CharField(max_length=20, choices = CROP_CHOICES,default= 'FRUITS')
     prefered_climate = models.CharField(max_length=1000)
@@ -94,10 +95,11 @@ class Orders(models.Model):
     id = models.UUIDField(primary_key=True,editable=False,default=uuid.uuid4)
     harvest = models.ForeignKey(Harvest,on_delete=models.CASCADE)
     buyer = models.ForeignKey(SaguraUsers,on_delete= models.CASCADE)
+    quantity = models.IntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         verbose_name_plural = "Buyer's Orders"
     
     def __str__(self):
-        return self.harvest
+        return str(self.harvest.crop_name) + " " + str(self.quantity) + "Kg"

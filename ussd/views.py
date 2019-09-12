@@ -17,7 +17,8 @@ def secondaryMenu():
     response = "CON 1. Market Place \n"
     response += "2. Fruits Info \n"
     response += "3. Vegetables Info \n"
-    response += "4. Subscribe \n"
+    response += "4. Cereals Info \n"
+    response += "5. Subscribe \n"
     response += "99. Main Menu"
     return response
 
@@ -112,9 +113,22 @@ def index(request):
                 session.session_data = {"crops":cropsInSession}
                 session.level = 21
                 session.save()
-            
-            #user subscription 4
+
             elif lastestInput == 4:
+                response = "CON Cereal Section \n"
+                vegetables = Crops.objects.filter(crop_type='CEREALS')[:5]
+                cropsInSession = {}
+                for index,vegetable in enumerate(vegetables):
+                    response += str(index+1) +". "+vegetable.name + "\n"
+                    cropsInSession[index+1] =  serializers.serialize('json', [ vegetable, ])
+
+                response += "99. Main Menu"
+                session.session_data = {"crops":cropsInSession}
+                session.level = 21
+                session.save()
+
+            #user subscription 5
+            elif lastestInput == 5:
 
                 try:
                     sagura_user = SaguraUsers.objects.get(phone_number=phone_number)
@@ -174,7 +188,7 @@ def index(request):
             elif lastestInput == 3:
                 response = "CON "+ cropSelected[0]['fields']['name'] +" Land Preparation: \n"
                 response += cropSelected[0]['fields']['maturity_process'] + " \n"
-                response += "00. Back \n"
+                response += "0. Back \n"
                 response += "99. Main Menu \n"
 
                 session.level = 23
@@ -247,6 +261,7 @@ def index(request):
             response += crop_quantity +" Kg of "+ crop_name+" is on sell at "+crop_price+" RWF per Kg"
 
         elif level == 28:
+            print(" Latest input ",lastestInput)
             harvestInSession = session.session_data['requests']
             harvestSelected = json.loads(harvestInSession[str(lastestInput)])
 
@@ -263,27 +278,10 @@ def index(request):
 
         elif level == 29:
             if lastestInput == 1:
-                #ordering harvest
-                harvestInSession = session.session_data['requests']
-                harvestSelected = json.loads(harvestInSession[str(lastestInput)])
-                harvest_id = harvestSelected[0]['pk']
-                harvest = Harvest.objects.get(id=harvest_id)
-                sagura_user = SaguraUsers.objects.get(phone_number=phone_number)
-
-                order = Orders.objects.create(harvest = harvest,
-                                              buyer = sagura_user)
-                
-                order.save()
-
-                buyerMessage = " Hello " + sagura_user.name + " You have successfully ordered " + harvest.crop_quantity + " Kg of " + harvest.crop_name
-                buyerNotification = send_SMS([sagura_user.phone_number],buyerMessage)
-
-                farmerMessage = " Hello "+ harvest.farmer.name + " Harvest order: "+ harvest.crop_quantity + "Kg of "+harvest.crop_name +" have been placed"
-                farmerNotification = send_SMS([harvest.farmer.phone_number],farmerMessage)
-
-
-                response = "END Thanks "+sagura_user.name+" for ordering "+harvest.crop_name
-
+                #order quantity
+                response = "CON How many Kgs do you want: \n"
+                session.level = 30
+                session.save()
 
             else:
                 #harvest on sale
@@ -297,6 +295,31 @@ def index(request):
                 session.session_data = {"requests":harvestInSession}
                 session.level = 28
                 session.save()
+
+        elif level == 30:
+            #ordering harvest
+            quantity = lastestInput
+            harvestInSession = session.session_data['requests']
+            harvestSelected = json.loads(harvestInSession[str(textArray[-3])])
+            harvest_id = harvestSelected[0]['pk']
+            harvest = Harvest.objects.get(id=harvest_id)
+            sagura_user = SaguraUsers.objects.get(phone_number=phone_number)
+            
+            order = Orders.objects.create(harvest = harvest,
+                                          buyer = sagura_user,
+                                          quantity = quantity)
+            
+            order.save()
+
+            buyerMessage = " Hello " + sagura_user.name + " You have successfully ordered " + str(quantity) + " Kg of " + harvest.crop_name
+            buyerNotification = send_SMS([sagura_user.phone_number],buyerMessage)
+
+            farmerMessage = " Hello "+ harvest.farmer.name + " Harvest order: "+ str(quantity) + "Kg of "+harvest.crop_name +" have been ordered by :" + sagura_user.name + " Phone Number " + sagura_user.phone_number
+            farmerNotification = send_SMS([harvest.farmer.phone_number],farmerMessage)
+
+
+            response = "END Thanks "+sagura_user.name+" for ordering "+harvest.crop_name
+
 
         #User subscription 41
         elif level == 41:

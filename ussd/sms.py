@@ -14,7 +14,6 @@ def send_SMS(recipients,message):
     sender = '11336'
     try:
         response = sms.send(message, recipients, sender)
-        print(response)
     except Exception as e:
         response = e
         print(f"Houston, we have a problem {e}")
